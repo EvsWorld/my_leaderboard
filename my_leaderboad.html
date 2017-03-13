@@ -1,0 +1,21 @@
+<head>
+    <title>Leaderboard</title>
+</head>
+<body>
+    <h1>Leaderboard (This is from HTML)</h1>
+    {{> leaderboard }}
+</body>
+
+<template name="leaderboard">
+    <div class="info">Number the players is: {{numPlayers}} <br>
+    The id of the selected dictionary is:  {{selectedPlayerIdFunct}}</div>
+
+    <ul>"Players : Scores : _id"
+        {{#each player}}
+            <li class="player {{selectedClass}}">{{name}}: {{score}}:  {{_id}}</li>
+        {{/each}}
+    </ul>
+<button class="increment">Give 5 Points</button>
+<button class="decrement">Take 5 Points</button>
+
+</template>
