@@ -1,5 +1,5 @@
 <head>
-    <title>Leaderboard</title>
+    <title>Leaderboard Tutorial: http://meteortips.com/first-meteor-tutorial/databases-part-2/</title>
 </head>
 <body>
     <h1>Leaderboard (This is from HTML)</h1>
@@ -7,15 +7,30 @@
 </body>
 
 <template name="leaderboard">
+    {{> addPlayerForm}}
     <div class="info">Number the players is: {{numPlayers}} <br>
-    The id of the selected dictionary is:  {{selectedPlayerIdFunct}}</div>
+    The id of the selected dictionary is:  {{selectedPlayerIdFnct}}</div>
 
-    <ul>"Players : Scores : _id"
+    <ul>Players : Scores : _id
         {{#each player}}
             <li class="player {{selectedClass}}">{{name}}: {{score}}:  {{_id}}</li>
         {{/each}}
+        {{#if selectedPlayer}}
+            <li>Selected Player: {{selectedPlayer.name}}</li>
+            <li>
+                <button class="increment">Give 5 Points</button>
+                <button class="decrement">Take 5 Points</button>
+                <button class="remove">Remove Player</button>
+            </li>
+        {{/if}}
     </ul>
-<button class="increment">Give 5 Points</button>
-<button class="decrement">Take 5 Points</button>
 
+
+</template>
+
+<template name="addPlayerForm">
+    <form>
+        <input type="text" name="playerName">
+        <input type="submit" value="Add Player">
+    </form>
 </template>
