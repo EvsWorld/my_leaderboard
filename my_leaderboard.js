@@ -1,18 +1,42 @@
 console.log("hello world (from console.log in .js file)");
 PlayersList = new Mongo.Collection('players');
 
-
+// Methods are simply blocks of code that can be triggered from else
+// where in an application
+Meteor.methods({
+    'createPlayer': function(playerNameVar){
+        // Checks if first arg is type of data described in 2nd arg
+        check(playerNameVar, String);
+        console.log("hello world from createPlayer method");
+        var currentUserId = Meteor.userId();
+        /** checking to see if the “currentUserId” variable returns true. This allows us to determine if the current user is logged-in because, if the current user is not logged-in, then the Meteor.userId function – and therefore, the “currentUserId” variable – will return false. */
+        if(currentUserId){
+            PlayersList.insert({
+            name: playerNameVar,
+            score: 0,
+            createdBy: currentUserId
+            });
+        }
+    },
+    'removePlayer': function(selectedPlayerId){
+        check(selectedPlayerId, String);
+        var currentUserId = Meteor.userId();
+        if(currentUserId){
+            PlayersList.remove({ _id: selectedPlayerId, createdBy: currentUserId });
+        }
+    },
+    'updateScore': function(selectedPlayerId, scoreValue){
+        check(selectedPlayerId, String);
+        check(scoreValue, Number);
+        if(Meteor.userId()) {
+            PlayersList.update( { _id: selectedPlayerId },
+                                { $inc: { score: scoreValue } });
+        }
+    }
+});
 
 if(Meteor.isClient) {
-    // upsert used to rebuild the missing name field in Bill and Bob's
-    // documents
-    // PlayersList.upsert({ _id:"p74YGwgCukGaLAhwk" }, { $set: { name: // "Bill", score: [30] }});
-    // PlayersList.upsert({ _id:"YfTuMTJMaz85P4H" }, { $set: { name: // "Bob", score: [30] }});
-
-    // PlayersList.upsert({ score: "0" }, { $set: { score: [40] }});
-
-    // Used remove to remove an document
-    // PlayersList.remove({ _id: "fmYfTuMTJMaz85P4H" });
+    Meteor.subscribe('thePlayers');
 
     console.log("Hello client");
 
@@ -47,19 +71,17 @@ if(Meteor.isClient) {
             Session.set('selectedPlayerId', this._id);
         },
         'click .increment': function(){
-            // $inc is like +=
-            PlayersList.update({ _id: Session.get('selectedPlayerId') }, { $inc: { score: 5 } });
+            var selectedPlayerId = Session.get('selectedPlayerId');
+            Meteor.call('updateScore', selectedPlayerId, -5);
         },
         'click .decrement': function(){
-            // First arg of update method is to select which dictionary
-            // in PlayersList collection to change. $inc is like -=
-            PlayersList.update({ _id: Session.get('selectedPlayerId') }, { $inc: { score: -5 } });
-        },
-        // When the remove button is clicked on a chat message, delete
-        // that message. Doesn't work however.
+            var selectedPlayerId = Session.get('selectedPlayerId');
+            Meteor.call('updateScore', selectedPlayerId, -5);
+        }
         'click .remove': function(){
-            PlayersList.remove(Session.get('selectedPlayerId'));
-        },
+            var selectedPlayerId = Session.get('selectedPlayerId');
+            Meteor.call('removePlayer', selectedPlayerId);
+        }
     });
 
 
@@ -74,18 +96,27 @@ if(Meteor.isClient) {
          * submitted so we have to put evt.preventDefault(); */
         'submit form': function(evt){
             evt.preventDefault();
-            var playerNameVar = event.target.playerName.value;
-            var currentUserId = Meteor.userId();
-            PlayersList.insert({
-                name: playerNameVar,
-                score: 0,
-                createdBy: currentUserId
-            });
-            evt.target.playerName.value = "";
+            var playerNameVar = evt.target.playerName.value;
+
+            /** Here, we’re using this Meteor.call function to call a
+             *  method, which simply means to trigger the execution
+             *  of the method that we’ve passed through between the
+             *  parentheses – in this case, we’re triggering the
+             *  “createPlayer” method. This means, whenever the user
+             *  adds a player to the list by submitting the form, the
+             *  code inside the “createPlayer” will be executed.*/
+            Meteor.call('createPlayer', playerNameVar);
+            evt.target.playerName.value = ""; //Blanks out form at end
         }
     });
 }
 
 if(Meteor.isServer) {
-    console.log("Hello server");
+    /** After saving the file, the output will appear inside the
+      * command line, only client-side code runs in the Console.
+      * B/c code that is executed on the server is inherently trusted. */
+    Meteor.publish('thePlayers', function(){
+        var  currentUserId = this.userId;
+        return PlayersList.find({ createdBy: currentUserId });
+    });
 }
